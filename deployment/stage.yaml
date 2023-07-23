@@ -1,0 +1,20 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 16
+  pre_build:    
+    commands: 
+      - npm install --legacy-peer-deps
+      - cd $CODEBUILD_SRC_DIR_ComponentsArtifact
+      - npm install --legacy-peer-deps
+      - npm run build
+      - npm pack
+      - cd $CODEBUILD_SRC_DIR
+  build:
+    commands:
+      - npm run build
+  post_build:
+    commands:
+    - aws s3 sync build/ s3://gvc-frontend-stage/ --cache-control max-age=300
+    - aws configure set preview.cloudfront true && aws cloudfront create-invalidation --distribution-id EWM24LHN2SB40 --paths /
